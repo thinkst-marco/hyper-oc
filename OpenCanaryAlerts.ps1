@@ -180,7 +180,6 @@ function StartOC {
 }
 
 function WriteNetworkInfo {
-    [cmdletbinding()]
     Write-Output "Configuring the guest's network settings"
     $networkInfo = "$vmIpAndNetmask,$vmGw,$vmDns"
     DeleteKvpItem "$vmName" "NetworkInfo" 
@@ -188,7 +187,6 @@ function WriteNetworkInfo {
 }
 
 function WriteCanarySettings {
-    [cmdletbinding()]
     Write-Output "Configuring the guest's Canary settings"
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($canarySettings)
     $canarySettingsb64 = [Convert]::ToBase64String($bytes)
@@ -326,7 +324,6 @@ function SetupEventLog {
 }
 
 function WatchOpenCanary {
-    [cmdletbinding()]
     Write-Output "Waiting for OpenCanary alerts"
     $LastAlert=0
     while ($true) {
