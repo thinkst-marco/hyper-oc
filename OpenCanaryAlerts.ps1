@@ -141,7 +141,7 @@ function SetupVM {
         $vmPath = "$pwd\OpenCanary\Virtual Machines\DED9DC8F-CF07-46A9-8D01-3F729D3DA05C.vmcx"
         if (-not (Test-Path -Path $vmPath)) {
             Write-Error "The OpenCanary Virtual machine must be downloaded into this directory first."
-            Write-Error "Run: wget -OutFile oc.zip https://github.com/thinkst/OpenCanary/releases"
+            Write-Error "Run: wget -OutFile oc.zip https://opencanary-hyperv-image.s3.eu-west-1.amazonaws.com/opencanary.zip"
             exit 1
         }
         Write-Output "Importing the $vmName VM into Hyper-V"
