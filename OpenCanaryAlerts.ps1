@@ -138,18 +138,27 @@ function DeleteKvpItem {
 function SetupVM {
     $vm = Get-VM -Name "$vmName" -ErrorAction SilentlyContinue
     if ($vm -eq $null) {
-        New-VM -Name "$vmName" -MemoryStartupBytes 2GB -Generation 2 -VHDPath ".\OpenCanary.vhdx" -NewVHDSizeBytes 50GB -SwitchName "CanarySwitch"
+        $vmPath = "$pwd\OpenCanary\Virtual Machines\DED9DC8F-CF07-46A9-8D01-3F729D3DA05C.vmcx"
+        if (-not (Test-Path -Path $vmPath)) {
+            Write-Error "The OpenCanary Virtual machine must be downloaded into this directory first."
+            Write-Error "Run: wget -OutFile oc.zip https://github.com/thinkst/OpenCanary/releases"
+            exit 1
+        }
+        Write-Output "Importing the $vmName VM into Hyper-V"
+        Import-VM -Path $vmPath -Copy -GenerateNewId
     }
 }
 
 function StartVM {
     $vm = Get-VM -Name "$vmName" -ErrorAction SilentlyContinue
     if ($vm.State -eq "Off") {
+        Write-Output "Startng the $vmName VM"
         Start-VM -Name "$vmName"
     }
 }
 
 function StartOC {
+    Write-Output "Startng the OpenCanary daemon in the VM"
     $vm = Get-VM -Name "$vmName" -ErrorAction SilentlyContinue
     if ($vm.State -eq "Running") {
         Enable-VMIntegrationService -VMName "$vmName" -Name "Guest Service Interface"
@@ -172,6 +181,7 @@ function StartOC {
 
 function WriteNetworkInfo {
     [cmdletbinding()]
+    Write-Output "Configuring the guest's network settings"
     $networkInfo = "$vmIpAndNetmask,$vmGw,$vmDns"
     DeleteKvpItem "$vmName" "NetworkInfo" 
     AddKvpItem "$vmName" "NetworkInfo" "$networkInfo"
@@ -179,6 +189,7 @@ function WriteNetworkInfo {
 
 function WriteCanarySettings {
     [cmdletbinding()]
+    Write-Output "Configuring the guest's Canary settings"
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($canarySettings)
     $canarySettingsb64 = [Convert]::ToBase64String($bytes)
     DeleteKvpItem "$vmName" "CanarySettings"
@@ -274,15 +285,20 @@ function Forward-Port-To-Canary {
 }
 
 function InstallNetNat {
+    Write-Output "Configuring NAT for the VM"
     $natNetwork = Get-Command -Name Get-NetNat -ErrorAction SilentlyContinue
     if (-not $natNetwork) {
         Write-Error "NAT network commands are not available. Ensure the 'NetNat' module is installed."
         exit 1
     }
+    $existingSwitch = Get-VMSwitch | Where-Object { $_.Name -eq $vmSwitch }
+    if ($null -eq $existingSwitch) {
+        Write-Output "The Hyper-V Virtual switch '$vmSwitch' does not exist. Creating it now..."
+        New-VMSwitch  -SwitchName $vmSwitch  -SwitchType Internal
+    }
     $existingNetwork = Get-NetNat | Where-Object { $_.Name -eq $vmNetwork }
     if ($null -eq $existingNetwork) {
         Write-Output "The NAT network '$NetworkName' does not exist. Creating it now..."
-        New-VMSwitch  -SwitchName $vmSwitch  -SwitchType Internal
         New-NetIPAddress  -IPAddress $vmGw  -PrefixLength $vmNetmask  -InterfaceAlias "vEthernet ($vmSwitch)"
         New-NetNat  -Name $vmNetwork -InternalIPInterfaceAddressPrefix "$vmNetworkAddress/$vmNetmask"
     }
@@ -295,6 +311,7 @@ function ClearPortForwarding {
 }
 
 function InstallPortForwarding {
+    Write-Output "Configuring the port fowarding rules"
     ClearPortForwarding
     foreach ($port in $portMapping.Keys) {
         Forward-Port-To-Canary "$vmName" "$vmNetwork" "$vmIp" $port $($portMapping[$port])
@@ -303,12 +320,14 @@ function InstallPortForwarding {
 
 function SetupEventLog {
     if (-not [System.Diagnostics.EventLog]::SourceExists($eventSource)) {
+        Write-Output "Creating an Event source called $eventSource"
         [System.Diagnostics.EventLog]::CreateEventSource($eventSource, "Application")
     }
 }
 
 function WatchOpenCanary {
     [cmdletbinding()]
+    Write-Output "Waiting for OpenCanary alerts"
     $LastAlert=0
     while ($true) {
         # Write-Output "Looped"
