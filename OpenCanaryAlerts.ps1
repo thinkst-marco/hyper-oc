@@ -53,7 +53,7 @@ function AddKvpItem {
     $kvpDataItem.Data = $keyData
     $kvpDataItem.Source = 0  # Source 0 indicates that the data is from the host to the guest
 
-    $vmMgmt.AddKvpItems($vm, $kvpDataItem.PSBase.GetText(1))
+    $vmMgmt.AddKvpItems($vm, $kvpDataItem.PSBase.GetText(1)) > $null
 
     Write-Output "Key Name: $($kvpDataItem.Name)"
     Write-Output "Key Data: $($kvpDataItem.Data)"
@@ -77,20 +77,6 @@ function ViewKvpItem {
     }
 }
 
-# function ViewKvpItems {
-#     [cmdletbinding()]
-#     Param (
-#         [string]
-#         $vmName
-#     )
-#     $VmMgmt = Get-WmiObject -Namespace root\virtualization\v2 -Class Msvm_VirtualSystemManagementService
-#     $vm = Get-WmiObject -Namespace root\virtualization\v2 -Class Msvm_ComputerSystem -Filter "ElementName='$vmName'"
-#     foreach ($item in ($vm.GetRelated("Msvm_KvpExchangeComponent")[0]).GetRelated("Msvm_KvpExchangeComponentSettingData").HostExchangeItems | % { $GuestExchangeItemsXml = ([XML]$_).SelectNodes("/INSTANCE/PROPERTY[@NAME='Name']/VALUE") }) {
-#         Write-Output "Name: $($item.Name)"
-#         Write-Output "Value: $($item.Value)"
-#     }
-# }
-
 function ModifyKvpItem {
     [cmdletbinding()]
     Param (
@@ -109,7 +95,7 @@ function ModifyKvpItem {
     $kvpDataItem.Data = "$keyData"
     $kvpDataItem.Source = 0
 
-    $VmMgmt.ModifyKvpItems($Vm, $kvpDataItem.PSBase.GetText(1))
+    $VmMgmt.ModifyKvpItems($Vm, $kvpDataItem.PSBase.GetText(1)) > $null
     Write-Output "Key Name: $($kvpDataItem.Name)"
     Write-Output "Key Data: $($kvpDataItem.Data)"
 }
@@ -131,8 +117,8 @@ function DeleteKvpItem {
     $kvpDataItem.Data = [String]::Empty
     $kvpDataItem.Source = 0
 
-    $VmMgmt.RemoveKvpItems($Vm, $kvpDataItem.PSBase.GetText(1))
-    Write-Output "Removed Key Name: $($kvpDataItem.Name)"
+    $VmMgmt.RemoveKvpItems($Vm, $kvpDataItem.PSBase.GetText(1)) > $null
+    #Write-Output "Removed Key Name: $($kvpDataItem.Name)"
 }
 
 function SetupVM {
@@ -152,13 +138,13 @@ function SetupVM {
 function StartVM {
     $vm = Get-VM -Name "$vmName" -ErrorAction SilentlyContinue
     if ($vm.State -eq "Off") {
-        Write-Output "Startng the $vmName VM"
+        Write-Output "Starting the $vmName VM"
         Start-VM -Name "$vmName"
     }
 }
 
 function StartOC {
-    Write-Output "Startng the OpenCanary daemon in the VM"
+    Write-Output "Starting the OpenCanary daemon in the VM"
     $vm = Get-VM -Name "$vmName" -ErrorAction SilentlyContinue
     if ($vm.State -eq "Running") {
         Enable-VMIntegrationService -VMName "$vmName" -Name "Guest Service Interface"
@@ -279,7 +265,7 @@ function Forward-Port-To-Canary {
         [int]
         $vmPort
     )
-    Add-NetNatStaticMapping -ExternalIPAddress "0.0.0.0/24" -ExternalPort  $externalPort -Protocol TCP -InternalIPAddress "$canaryIp" -InternalPort $vmPort -NatName "$networkName"
+    Add-NetNatStaticMapping -ExternalIPAddress "0.0.0.0/24" -ExternalPort  $externalPort -Protocol TCP -InternalIPAddress "$canaryIp" -InternalPort $vmPort -NatName "$networkName" > $null
 }
 
 function InstallNetNat {
