@@ -184,6 +184,13 @@ def exit_gracefully(signum, frame):
     sys.exit(0)
 
 kv_pairs = get_kv_pairs()
+if len(kv_pairs) == 0:
+    print("No config pairs were seen from the Hyper-V host, has the VM been launched through the OpenCanary.ps1 script?", file=sys.stderr)
+    print("I am simply doing nothing right now...", file=sys.stderr)
+    # The systemd unit will keep restarting if we bail now, so just... do nothing
+    while True:
+        time.sleep(10000000)
+
 configure_network(kv_pairs)
 read_oc_configuration(kv_pairs)
 launch_oc()

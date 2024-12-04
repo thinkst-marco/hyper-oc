@@ -1,7 +1,7 @@
 # Define variables for the VM name, key, and data
 $vmName = "OpenCanary"
 $vmNetwork = "CanaryNetwork"
-$vmSwitch = "CanarySwitch"
+$vmSwitch = "Canary"
 $vmNetworkAddress = "172.16.0.0"
 $vmIp = "172.16.10.101"
 $vmNetmask = "24"
@@ -279,6 +279,11 @@ function InstallNetNat {
     if ($null -eq $existingSwitch) {
         Write-Output "The Hyper-V Virtual switch '$vmSwitch' does not exist. Creating it now..."
         New-VMSwitch  -SwitchName $vmSwitch  -SwitchType Internal
+    }
+    if ( (Get-VMNetworkAdapter -VMName OpenCanary).SwitchName -ne $vmSwitch ) {
+        Write-Output "The VM is connected to another virtual switch. I'm changing that to $vmSwitch for you..."
+        Connect-VMNetworkAdapter -VMName $vmName -SwitchName $vmSwitch
+        Write-Output "Done."
     }
     $existingNetwork = Get-NetNat | Where-Object { $_.Name -eq $vmNetwork }
     if ($null -eq $existingNetwork) {
