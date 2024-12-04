@@ -124,7 +124,7 @@ function DeleteKvpItem {
 function SetupVM {
     $vm = Get-VM -Name "$vmName" -ErrorAction SilentlyContinue
     if ($vm -eq $null) {
-        $vmPath = "$pwd\OpenCanary\Virtual Machines\DED9DC8F-CF07-46A9-8D01-3F729D3DA05C.vmcx"
+        $vmPath = "$pwd\OpenCanary\Virtual Machines\2C87EBD1-C30B-4296-AB07-2ED9B321E946.vmcx"
         if (-not (Test-Path -Path $vmPath)) {
             Write-Error "The OpenCanary Virtual machine must be downloaded into this directory first."
             Write-Error "Run: wget -OutFile opencanary.zip https://opencanary-hyperv-image.s3.eu-west-1.amazonaws.com/opencanary.zip; Expand-Archive opencanary.zip -DestinationPath .\"
