@@ -11,3 +11,7 @@ New-VM -Name "OpenCanary" -MemoryStartupBytes 2GB -Version 11.0
 $ wget http://x.x.x.x:8000/install.sh
 $ ./install.sh
 ```
+
+# VM storage
+
+It resides in opencanary-hyperv-image in eu-west-1 in the 8965... account

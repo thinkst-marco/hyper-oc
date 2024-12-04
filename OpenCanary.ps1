@@ -2,7 +2,7 @@
 $vmName = "OpenCanary"
 $vmNetwork = "CanaryNetwork"
 $vmSwitch = "Canary"
-$vmNetworkAddress = "172.16.0.0"
+$vmNetworkAddress = "172.16.10.0"
 $vmIp = "172.16.10.101"
 $vmNetmask = "24"
 $vmIpAndNetmask = "$vmIp/$vmNetmask"
